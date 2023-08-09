@@ -20,9 +20,9 @@ The purpose of this repository is to collect the data of each pokemon and store 
 
 ___
 
-** Quick Start Guide **
+**Quick Start Guide**
 
-1. Setup Python on your machine (Windows Setup)[https://docs.python.org/3/using/windows.html] (Mac Setup)[https://docs.python.org/3/using/mac.html]
+1. Setup Python on your machine ([Windows Setup](https://docs.python.org/3/using/windows.html)) ([Mac Setup](https://docs.python.org/3/using/mac.html))
 2. Clone this repository
 3. Open a terminal and navigate to the 'Script' folder in this Repository
 4. Enter the command: `python ws_bulbapedia.py` (or `python3 ws_bulbapedia.py` if `python` is not recognized)
