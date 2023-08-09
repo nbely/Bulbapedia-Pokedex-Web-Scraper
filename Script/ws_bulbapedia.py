@@ -141,8 +141,8 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     p_tables = p_table.select('table.roundy')
 
     #Find Dex Number
-    no.append(p_tables[0].th.big.a.span.text)
-    print(no[f_index] + "   (pokeIndex: " + str(p_index) + ") (formeIndex: " + str(f_index) + ")")
+    no.append(int(p_tables[0].th.big.a.span.text.split('#')[1]))
+    print("Pokedex No: #" + str(no[f_index]) + " (pokeIndex: " + str(p_index) + ") (formeIndex: " + str(f_index) + ")")
 
     #Find Name
     name.append(p_tables[0].select('td.roundy td big b')[0].text)
@@ -251,7 +251,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       forme.append('')
     # Set the forme otherwise
     else:
-      forme.append(f_a[f_num]['title'])
+      forme.append(f_a[f_num]['title'].replace('\u00A0', ' '))
     print("Forme: " + forme[f_index])
 
     #Find Classification
@@ -260,24 +260,26 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     classifs.pop()
     # Separate 1-to-1 classification assignments for formes
     if num_formes == len(classifs):
-      classif = classifs[f_num] + ' Pokémon'
+      classif = classifs[f_num].strip()
     # Handle exceptions for classification count and forme count not matching up
     else:
       if name[f_index] == 'Basculin':
         if f_num < 2:
-          classif = 'Hostile Pokémon'
+          classif = 'Hostile'
         else:
-          classif = 'Mellow Pokémon'
+          classif = 'Mellow'
       elif name[f_index] == 'Darmanitan':
         if f_num % 2 == 0:
-          classif = 'Blazing Pokémon'
+          classif = 'Blazing'
         else:
-          classif = 'Zen Charm Pokémon'
+          classif = 'Zen Charm'
       elif name[f_index] == 'Calyrex':
         if f_num == 0:
-          classif = 'King Pokémon'
+          classif = 'King'
         else:
-          classif = 'High King Pokémon'
+          classif = 'High King'
+    if "Pokémon" in classif:
+      classif = classif.replace('Pokémon', '').strip()
     classification.append(classif)
     print("Classification: " + classification[f_index])
     
@@ -286,21 +288,38 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     g = BeautifulSoup(str(g), "html.parser").get_text()
     g = g[:-1][1:]
     g = g.split(",")
-    generation.append(g[0])
+    if (g[0].strip() == 'Generation I'):
+      generation.append(1)
+    elif (g[0].strip() == 'Generation II'):
+      generation.append(2)
+    elif (g[0].strip()  == 'Generation III'):
+      generation.append(3)
+    elif (g[0].strip()  == 'Generation IV'):
+      generation.append(4)
+    elif (g[0].strip()  == 'Generation V'):
+      generation.append(5)
+    elif (g[0].strip()  == 'Generation VI'):
+      generation.append(6)
+    elif (g[0].strip()  == 'Generation VII'):
+      generation.append(7)
+    elif (g[0].strip()  == 'Generation VIII'):
+      generation.append(8)
+    elif (g[0].strip()  == 'On Smogon Pokédex'): # FUTURE: Remove 'On Smogon Pokédex one Gen IX is updated in Bulbapedia):
+      generation.append(9)
     # Override Generation for Regional and Gimmick Formes
     if 'Mega' in forme[f_index]:
-      generation[f_index] = 'Generation VI'
+      generation[f_index] = 6
     if 'Alolan' in forme[f_index]:
-      generation[f_index] = 'Generation VII'
+      generation[f_index] = 7
     if (
       'Galarian' in forme[f_index]
       or 'Gigantamax' in forme[f_index]
       or 'Hisuian' in forme[f_index]
     ):
-      generation[f_index] = 'Generation VIII'
-    if 'Paldean' in forme[f_index] or generation[f_index] == 'On Smogon Pokédex': # FUTURE: Remove 'On Smogon Pokédex one Gen IX is updated in Bulbapedia
-      generation[f_index] = 'Generation IX'
-    print("Generation: " + generation[f_index])
+      generation[f_index] = 8
+    if 'Paldean' in forme[f_index]:
+      generation[f_index] = 9
+    print("Generation: " + str(generation[f_index]))
 
     #Find Typing
     t_found = False
@@ -823,8 +842,12 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
 
     #Find Base Friendship
     fr = p_tables[17].select('td')
-    baseFriendship.append(fr[0].text.strip())
-    print("Base Friendship: " + baseFriendship[f_index])
+    bfr = fr[0].text.strip()
+    if bfr == 'Unknown':
+      baseFriendship.append(0)
+    else:
+      baseFriendship.append(int(bfr))
+    print("Base Friendship: " + str(baseFriendship[f_index]))
 
     #Find Base Stats
     st_tables = p_soup.select('table[style*="white-space:nowrap"]')
@@ -943,21 +966,23 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           elif gen_header == 'Generation VIII onward':
             st_indices[7] = st
             st_indices[8] = st
-    if generation[f_index] != 'Generation I':
+    
+
+    if generation[f_index] != 1:
       st_indices[0] = -1
-      if generation[f_index] != 'Generation II':
+      if generation[f_index] != 2:
         st_indices[1] = -1
-        if generation[f_index] != 'Generation III':
+        if generation[f_index] != 3:
           st_indices[2] = -1
-          if generation[f_index] != 'Generation IV':
+          if generation[f_index] != 4:
             st_indices[3] = -1
-            if generation[f_index] != 'Generation V':
+            if generation[f_index] != 5:
               st_indices[4] = -1
-              if generation[f_index] != 'Generation VI':
+              if generation[f_index] != 6:
                 st_indices[5] = -1
-                if generation[f_index] != 'Generation VII':
+                if generation[f_index] != 7:
                   st_indices[6] = -1
-                  if generation[f_index] != 'Generation VIII':
+                  if generation[f_index] != 8:
                     st_indices[7] = -1
 
     hp_stats = []
