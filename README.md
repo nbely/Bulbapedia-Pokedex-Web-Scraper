@@ -43,8 +43,8 @@ The .csv file includes the following:
 9. Ability 2 (Blank if none)
 10. Hidden Ability (Blank if none)
 11. Gender Assignment (Blank if always true)
-12. Gender Male Ratio
-13. Gender Female Ratio
+12. Gender Male Ratio (Blank if Gender Assignment is Unknown (N))
+13. Gender Female Ratio (Blank if Gender Assignment is Unknown (N))
 14. Catch Rate
 15. Egg Group 1 (Blank if none)
 16. Egg Group 2 (Blank if none)
