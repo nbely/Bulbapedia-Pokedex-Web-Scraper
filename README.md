@@ -34,7 +34,7 @@ ___
 The .csv file includes the following:
 1. Dex No.
 2. Name
-3. Forme Name
+3. Forme Name (Blank if none)
 4. Classification
 5. Generation
 6. Primary Typing
