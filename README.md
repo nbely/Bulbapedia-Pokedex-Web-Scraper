@@ -61,11 +61,11 @@ The .csv file includes the following:
 34. Shape Image URL
 35. Footprint Image URL ('?' Image if not from Gen I-V)
 36. Base Friendship
-37. Base HP Stats (Comma-Separated by Generation)
-38. Base Attack Stat (Comma-Separated by Generation)
-39. Base Defense Stat (Comma-Separated by Generation)
-40. Base Special Attack Stat (Comma-Separated by Generation)
-41. Base Special Defense Stat (Comma-Separated by Generation)
-42. Base Speed Stat (Comma-Separated by Generation)
-43. Base Total Stats (Comma-Separated by Generation)
+37. Base HP Stats (Pipe-Separated by Generation)
+38. Base Attack Stat (Pipe-Separated by Generation)
+39. Base Defense Stat (Pipe-Separated by Generation)
+40. Base Special Attack Stat (Pipe-Separated by Generation)
+41. Base Special Defense Stat (Pipe-Separated by Generation)
+42. Base Speed Stat (Pipe-Separated by Generation)
+43. Base Total Stats (Pipe-Separated by Generation)
 44. Color
