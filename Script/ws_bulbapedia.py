@@ -18,8 +18,8 @@ soup = BeautifulSoup(page, 'html.parser')
 # Start of Script
 no = []
 name = []
-classification = []
 forme = []
+classification = []
 generation = []
 primary = []
 secondary = []
@@ -53,7 +53,6 @@ evYieldSpDef = []
 evYieldSpd = []
 shape = []
 footprint = []
-color = []
 baseFriendship = []
 hp = []
 atk = []
@@ -62,6 +61,7 @@ spatk = []
 spdef = []
 spd = []
 bst = []
+color = []
 
 # Scrape Pokemon List from Bulbapedia
 all_matches = soup.find_all('table', class_='roundy').pop()
