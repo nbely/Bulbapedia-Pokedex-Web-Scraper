@@ -26,6 +26,7 @@ secondary = []
 abil1 = []
 abil2 = []
 habil = []
+otherAbil = []
 gender = []
 genderM = []
 genderF = []
@@ -96,14 +97,21 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     or f_a[0]['title'] == "Gastrodon"
     or f_a[0]['title'] == "Meowstic"
     or f_a[0]['title'] == "Indeedee"
+    or f_a[0]['title'] == "Basculegion"
     or f_a[0]['title'] == "Oinkologne"
   ):
     manual_added_formes.append(f_a[0]['title'])
     num_formes = 2
+  elif f_a[0]['title'] == "Greninja":
+    manual_added_formes.append(f_a[0]['title'])
+    num_formes = 3
   elif f_a[0]['title'] == "Pumpkaboo" or f_a[0]['title'] == "Gourgeist":
     manual_added_formes.append(f_a[0]['title'])
     num_formes = 4
-  elif f_a[0]['title'] == "Meteor Form":
+  elif f_a[0]['title'] == "50% Forme": # Zygarde
+    manual_added_formes.append(f_a[0]['title'])
+    num_formes = 5
+  elif f_a[0]['title'] == "Meteor Form": # Minior
     manual_added_formes.append(f_a[0]['title'])
     num_formes = 8
   elif f_a[0]['title'] == "Alcremie":
@@ -158,7 +166,14 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         forme.append("West Sea " + name[f_index])
       elif f_num == 1:
         forme.append("East Sea" + name[f_index])
-    elif (name[f_index] == 'Vivillon'):
+    elif name[f_index] == 'Greninja':
+      if f_num == 0:
+        forme.append('')
+      elif f_num == 1:
+        forme.append('Battle Bond Greninja')
+      elif f_num == 2:
+        forme.append('Ash-Greninja')
+    elif name[f_index] == 'Vivillon':
       if f_num == 0:
         forme.append('Meadow Pattern')
       elif f_num == 1:
@@ -202,6 +217,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     elif (
       name[f_index] == "Meowstic"
       or name[f_index] == "Indeedee"
+      or name[f_index] == "Basculegion"
       or name[f_index] == "Oinkologne"
     ):
       if f_num == 0:
@@ -220,6 +236,17 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         forme.append("Large Size")
       elif f_num == 3:
         forme.append("Super Size")
+    elif (name[f_index] == "Zygarde"):
+      if f_num == 0:
+        forme.append("50% Forme")
+      elif f_num == 1:
+        forme.append("10% Forme")
+      elif f_num == 2:
+        forme.append("Complete Forme")
+      elif f_num == 3:
+        forme.append("Power Construct 50% Forme")
+      elif f_num == 4:
+        forme.append("Power Construct 10% Forme")
     elif (name[f_index] == "Minior"):
       if f_num == 0:
         forme.append("Meteor Form")
@@ -247,7 +274,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       elif f_num == 9:
         forme.append("Gigantamax Alcremie")
     # Set no forme if the base Pokémon name is matched
-    elif (f_a[f_num]['title'] == name[f_index]):
+    elif f_a[f_num]['title'] == name[f_index]:
       forme.append('')
     # Set the forme otherwise
     else:
@@ -321,7 +348,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       generation[f_index] = 9
     print("Generation: " + str(generation[f_index]))
 
-    #Find Typing
+    #Find Types
     t_found = False
     t_tds = p_tables[2].select('tbody tr td')
     for t_td in t_tds:
@@ -336,8 +363,8 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           if (len(parsed_form) > 1):
             parsed_form = parsed_form[1].split(')')[0] # Parsed form for Urshifu
           if (
-            t_td.select('small')[0].text.replace('(', ' (') != forme[f_index]
-            and t_td.select('small')[0].text != parsed_form
+            t_td.select('small')[0].text.replace('(', ' (').replace('\u00A0', ' ')!= forme[f_index]
+            and t_td.select('small')[0].text.replace('\u00A0', ' ') != parsed_form
           ):
             continue
       t = t_td.select('a[href*="(type)"] span b')
@@ -368,6 +395,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     print("Type 1: " + primary[f_index])
     print("Type 2: " + secondary[f_index])
 
+    #TODO: Fix Abilities for various Pokemon with formes
     #Find Abilities
     a_found = False
     ha_found = False
@@ -376,27 +404,46 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     for a_i in range(len(a_tds)):
       ability_type = "Ability"
       if len(a_tds[a_i].select('small')) != 0:
-        td_small = a_tds[a_i].select('small')[0].text
-
+        td_small = a_tds[a_i].select('small')[0].text.replace('\u00A0', ' ').strip()
+        td_small_matched = False
+        fnames = []
+        if (forme[f_index] != ''):
+          if f_num == 0:
+            fnames.append(name[f_index])
+          fnames.append(forme[f_index])
+        else:
+          fnames.append(name[f_index])
         if ("Hidden Ability" in td_small):
           ability_type = "Hidden Ability"
           base_ha_index = a_i
-
-        if (f_num == 0 or forme[f_index] == ''):
-          if (
-            td_small != name[f_index] + " Ability"
-            and td_small != " Hidden Ability"
-            and td_small != name[f_index] + " Hidden Ability"
-          ):
-            continue
-        else:
-          if (
-            td_small != forme[f_index]
-            and td_small != forme[f_index] + " Ability"
-            and td_small != forme[f_index] + " Hidden Ability"
-            and td_small != forme[f_index].split(' (')[0] + " Hidden Ability" #For Paldean Tauros
-          ):
-            continue
+        td_small_fnames = td_small.split(' & ')
+        if len(td_small_fnames) < 2:
+          td_small_fnames = td_small.split(' and ')
+          if len(td_small_fnames) < 2:
+            td_small_fnames = td_small.split('/')
+            if len(td_small_fnames) > 1:
+              td_small_fnames[0] = td_small_fnames[0] + " " + name[f_index]
+        if "50%, 10% & Complete Formes" in td_small:  # Exception for Zygarde
+          td_small_fnames = ["Power Construct 50% Forme", "Power Construct 10% Forme", "Complete Forme"]
+        for fname in fnames:
+          a_matches = [
+            fname,
+            "Ability",
+            fname + " Ability",
+          ]
+          ha_matches = [
+            "Hidden Ability",
+            fname + " Hidden Ability",
+            fname.split(' (')[0] + " Hidden Ability",  # Exception for Paldean Tauros/Ushifu
+            "Gen VIII+ Hidden Ability",
+            "Gen VI+ " + fname + " Hidden Ability",
+            "Gen VIII+ " + fname + " Hidden Ability",
+          ]
+          matches = set(td_small_fnames).intersection(a_matches + ha_matches)
+          if len(matches) > 0:
+            td_small_matched = True
+        if td_small_matched == False:
+          continue
       else:
         if f_num > 0:
           continue
@@ -406,7 +453,13 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       if a[0].text == 'Cacophony':
         continue
       if (ability_type == "Ability"):
-        abil1.append(a[0].text)
+        if a[0].text == 'As One':  # Exception for Calyrex
+          if forme[f_index] == 'Ice Rider Calyrex':
+            abil1.append('As One (Glastrier)')
+          else:
+            abil1.append('As One (Spectrier)')
+        else:
+          abil1.append(a[0].text)
         if len(a) > 1:
           if a[1].text == 'Cacophony':
             abil2.append('')
@@ -414,9 +467,19 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
             abil2.append(a[1].text)
         else:
           abil2.append('')
+        if len(habil) == f_index + 1:
+          habil[f_index] = ''
         a_found = True
       elif (ability_type == "Hidden Ability"):
-        habil.append(a[0].text)
+        if "Zen Mode" in forme[f_index]:  # Exception for Darmanitan Zen Mode
+          abil1.append('Zen Mode')
+          abil2.append('')
+          habil.append('')
+          a_found = True
+        elif len(habil) == f_index:
+          habil.append(a[0].text)
+        else:
+          habil[f_index] = a[0].text
         ha_found = True
       if (a_found and ha_found):
         break
@@ -432,8 +495,9 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           abil2.append('')
     if ha_found == False:
       a = p_tables[3].select('td a[title*="(Ability)"] span')
-      ha = a_tds[base_ha_index-1].select('a[title*="(Ability)"] span')
-      if forme[f_index] != '':
+
+      if base_ha_index > 0:
+        ha = a_tds[base_ha_index-1].select('a[title*="(Ability)"] span')
         if abil1[f_index] != a[0].text:
           habil.append('')
         else:
@@ -460,7 +524,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         genderM.append(float(g_mf[0].text.split('%')[0])/100)
         genderF.append(float(g_mf[2].text.split('%')[0])/100)
       else:
-        if g_mf[0].text == '100% Female':
+        if g_mf[0].text == '100% female':
           gender.append('F')
           genderM.append(0)
           genderF.append(1)
@@ -503,13 +567,24 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     eg_override = p_tables[6].select('sup a')
     if len(eg_override) > 0 :
       for override in eg_override:
-        if override['title'] == forme[f_index]:
+        override_span = override.select('span')
+        override_text = []
+        if len(override_span) > 0:
+          override_text = override_span[0].text.split(' & ')
+        if (
+          override['title'] == forme[f_index]
+          or forme[f_index] in override_text
+        ):
           if (eg[len(eg)-1].text == 'No Eggs Discovered'):
             eggGroup1[f_index] = ''
             eggGroup2[f_index] = ''
           else:
             eggGroup1[f_index] = eg[len(eg)-1].text
             eggGroup2[f_index] = ''
+    if 'Parter' in forme[f_index]:
+      eggGroup1[f_index] = ''
+      eggGroup2[f_index] = ''
+
     print("Egg Group 1: " + eggGroup1[f_index])
     print("Egg Group 2: " + eggGroup2[f_index])
 
@@ -528,7 +603,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           if h_tds[h*3+2].find('small').text != name[f_index]:
             continue
         else:
-          if h_tds[h*3+2].find('small').text.replace('(', ' (') != forme[f_index]:
+          if h_tds[h*3+2].find('small').text.replace('\u00A0', ' ').replace('(', ' (') != forme[f_index].replace('Power Construct ', ''): # Replace for PC Zygarde formes
             continue
         heightUS = h_tds[h*3].text.replace("′", "'").replace('″', '"').split("'")
         if (len(heightUS) < 2 and heightUS[0] == '\n'):
@@ -562,14 +637,24 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           if w_tds[w*3+2].find('small').text != name[f_index]:
             continue
         else:
-          if w_tds[w*3+2].find('small').text.replace('(', ' (') != forme[f_index]:
+          if w_tds[w*3+2].find('small').text.replace('\u00A0', ' ').replace('(', ' (') != forme[f_index].replace('Power Construct ', ''): # Replace for PC Zygarde formes
             continue
         weightPounds = w_tds[w*3].text.replace(',', '').split(" lbs.")[0]
-        if weightPounds == '0' or weightPounds == '???' or weightPounds == 'lbs.\n':
+        if (
+          weightPounds == '0'
+          or weightPounds == '???'
+          or weightPounds == 'lbs.\n'
+          or forme[f_index] == 'Gigantamax Butterfree'
+        ):
           weightPounds = w_tds[0].text.replace(',', '').split(" lbs.")[0]
         weightLbs.append(float(weightPounds))
         weightKilos = w_tds[w*3+1].text.replace(',', '').split(' kg')[0]
-        if weightKilos == '0' or weightKilos == '???' or weightKilos == 'kg\n':
+        if (
+          weightKilos == '0'
+          or weightKilos == '???'
+          or weightKilos == 'kg\n'
+          or forme[f_index] == 'Gigantamax Butterfree'
+        ):
           weightKilos = w_tds[1].text.replace(',', '').split(' kg')[0]
         weightKg.append(float(weightKilos))
         weightSet = True
@@ -807,7 +892,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       elif (
         name[f_index] == 'Palkia' and forme[f_index] == 'Origin Forme'
         or name[f_index] == 'Landorus' and forme[f_index] == 'Therian Forme'
-        or name[f_index] == 'Zygarde' and forme[f_index] == '10% Forme'
+        or name[f_index] == 'Zygarde' and forme[f_index].replace('Power Construct ', '') == '10% Forme'
         or forme[f_index] == 'Dusk Mane Necrozma'
         or forme[f_index] == 'Ice Rider Calyrex'
         or forme[f_index] == 'Shadow Rider Calyrex'
@@ -857,43 +942,37 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       htag_loc = 3
       found_loc = htag_loc
       header_located = False
+      st_header = ''
       for loc in range(4):
-        st_header = st_tables[st].find_previous('h'+str(htag_loc))
-        if st_header == None:
+        temp_header = st_tables[st].find_previous('h'+str(htag_loc))
+        if temp_header == None:
           htag_loc = htag_loc + 1
           continue
-        st_header = st_header.text.strip()
-        if (st_header == 'Base Stats' or st_header == 'Base stats'):
+        temp_header = temp_header.text.strip()
+        if (temp_header == 'Base Stats' or temp_header == 'Base stats'):
           found_loc = htag_loc
+          st_header = temp_header
           header_located = True
-          htag_loc = htag_loc + 1
-          continue
         elif (
-          st_header == name[f_index]
-          or st_header == forme[f_index]
-          or st_header == forme[f_index].split(' (')[0] #For Paldean Tauros
+          temp_header == name[f_index]
+          or temp_header == forme[f_index].replace('Power Construct ', '')  # Replace exception for PC Zygarde Formes
+          or temp_header == forme[f_index].split(' (')[0]  # Exception For Paldean Tauros
+          or name[f_index] == "Rotom" and forme[f_index].split(' ')[0] in temp_header  # Exception for Rotom Formes
         ):
+          st_header = temp_header
           found_loc = htag_loc
           header_located = True
-          break
         htag_loc = htag_loc + 1
       if header_located == False:
         continue
       else:
         if (
-          st_header == forme[f_index]
-          or st_header == forme[f_index].split(' (')[0] #For Paldean Tauros
+          st_header == forme[f_index].replace('Power Construct ', '')  # Replace exception for PC Zygarde Formes
+          or st_header == forme[f_index].split(' (')[0]  # Exception For Paldean Tauros
+          or name[f_index] == "Rotom" and forme[f_index].split(' ')[0] in st_header  # Exception for Rotom Formes
           and forme_indices_set == False
         ):
-          st_indices[0] = st
-          st_indices[1] = st
-          st_indices[2] = st
-          st_indices[3] = st
-          st_indices[4] = st
-          st_indices[5] = st
-          st_indices[6] = st
-          st_indices[7] = st
-          st_indices[8] = st
+          st_indices = [st, st, st, st, st, st, st, st, st]
           forme_indices_set = True
         gen_header = ''
         sub_header = st_tables[st].find_previous('h'+str(found_loc+1))
@@ -903,8 +982,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         elif 'Generation' in super_header:
           gen_header = super_header
         if gen_header != '':
-
-          if gen_header == 'Generations I-V':
+          if gen_header == 'Generations I-V' or gen_header == 'Generations I to V':
             st_indices[0] = st
             st_indices[1] = st
             st_indices[2] = st
@@ -954,20 +1032,21 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           elif gen_header == 'Generations VI-VII':
             st_indices[5] = st
             st_indices[6] = st
-          elif gen_header == 'Generation VI onward':
+          elif 'Generation VI onward' in gen_header:
             st_indices[5] = st
             st_indices[6] = st
             st_indices[7] = st
             st_indices[8] = st
-          elif gen_header == 'Generation VII onward' or gen_header == 'Generation VII':
+          elif 'Generation VII onward' in gen_header or gen_header == 'Generation VII':
             st_indices[6] = st
             st_indices[7] = st
             st_indices[8] = st
-          elif gen_header == 'Generation VIII onward':
+          elif 'Generation VIII onward' in gen_header:
             st_indices[7] = st
             st_indices[8] = st
-    
-
+          elif "Version" in gen_header:
+            if st == len(st_tables) - 1:
+              st_indices = [st, st, st, st, st, st, st, st, st]
     if generation[f_index] != 1:
       st_indices[0] = -1
       if generation[f_index] != 2:
@@ -984,7 +1063,6 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
                   st_indices[6] = -1
                   if generation[f_index] != 8:
                     st_indices[7] = -1
-
     hp_stats = []
     atk_stats = []
     def_stats = []
@@ -1062,7 +1140,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       forme[f_index] == 'Galarian Moltres'
       or name[f_index] == 'Castform' and forme[f_index] == 'Sunny Form'
       or name[f_index] == 'Burmy' and forme[f_index] == 'Trash Cloak'
-      or name[f_index] == 'Wormadon' and forme[f_index] == 'Trash Cloak'
+      or name[f_index] == 'Wormadam' and forme[f_index] == 'Trash Cloak'
       or name[f_index] == 'Deerling' and forme[f_index] == 'Autumn Form'
       or name[f_index] == 'Vivillon' and forme[f_index] == 'Modern Pattern'
       or name[f_index] == 'Vivillon' and forme[f_index] == 'Sun Pattern'
@@ -1128,7 +1206,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       or forme[f_index] == 'Paldean Tauros (Blaze Breed)'
       or forme[f_index] == 'Paldean Tauros (Aqua Breed)'
       or forme[f_index] == 'Hisuian Qwilfish'
-      or name[f_index] == 'Zygarde' and forme[f_index] == '10% Forme'
+      or name[f_index] == 'Zygarde' and forme[f_index].replace('Power Construct ', '') == '10% Forme'
       or name[f_index] == 'Zygarde' and forme[f_index] == 'Complete Forme'
       or forme[f_index] == 'Shadow Rider Calyrex'
     ):
@@ -1138,7 +1216,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       or forme[f_index] == 'Galarian Meowth'
       or forme[f_index] == 'Paldean Wooper'
       or name[f_index] == 'Burmy' and forme[f_index] == 'Sandy Cloak'
-      or name[f_index] == 'Wormadon' and forme[f_index] == 'Sandy Cloak'
+      or name[f_index] == 'Wormadam' and forme[f_index] == 'Sandy Cloak'
       or name[f_index] == 'Deerling' and forme[f_index] == 'Winter Form'
       or name[f_index] == 'Vivillon' and forme[f_index] == 'Archipelago Pattern'
       or name[f_index] == 'Vivillon' and forme[f_index] == 'High Plains Pattern'
@@ -1156,7 +1234,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       or name[f_index] == 'Vivillon' and forme[f_index] == 'Elegant Pattern'
       or name[f_index] == 'Oricorio' and forme[f_index] == 'Sensu Style'
       or name[f_index] == 'Minior' and forme[f_index] == 'Violet Core'
-      or name[f_index] == 'Morpekko' and forme[f_index] == 'Hangry Mode'
+      or name[f_index] == 'Morpeko' and forme[f_index] == 'Hangry Mode'
     ):
       color[f_index] = 'Purple'
     elif (
@@ -1184,6 +1262,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       or name[f_index] == 'Vivillon' and forme[f_index] == 'Icy Snow Pattern'
       or forme[f_index] == 'Female Meowstic'
       or forme[f_index] == 'Ice Rider Calyrex'
+      or forme[f_index] == 'Hisuian Braviary'
       or name[f_index] == 'Squawkabilly' and forme[f_index] == 'White Plumage'
     ):
       color[f_index] = 'White'
@@ -1197,6 +1276,12 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
 
     print(" ")
     f_index = f_index + 1
+    # print(len(abil1))
+    # print(abil1)
+    # print(len(abil2))
+    # print(abil2)
+    # print(len(habil))
+    # print(habil)
   p_index = p_index + 1
 
 pokemon = {
@@ -1207,8 +1292,8 @@ pokemon = {
   'Generation':generation,
   'Primary Type': primary,
   'Secondary Type': secondary,
-  'Ability 1': abil1[:f_index],
-  'Ability 2': abil2[:f_index],
+  'Ability 1': abil1,
+  'Ability 2': abil2,
   'Hidden Ability': habil,
   'Gender': gender,
   'Male Gender Ratio': genderM,
