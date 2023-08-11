@@ -395,7 +395,6 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     print("Type 1: " + primary[f_index])
     print("Type 2: " + secondary[f_index])
 
-    #TODO: Fix Abilities for various Pokemon with formes
     #Find Abilities
     a_found = False
     ha_found = False
