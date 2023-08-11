@@ -1022,6 +1022,12 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
             st_indices[3] = st
             st_indices[4] = st
             st_indices[5] = st
+          elif gen_header == 'Generation IV to VIII':
+            st_indices[3] = st
+            st_indices[4] = st
+            st_indices[5] = st
+            st_indices[6] = st
+            st_indices[7] = st
           elif gen_header == 'Generation V':
             st_indices[4] = st
           elif gen_header == 'Generations V-VI' or gen_header == 'Generations V & VI':
@@ -1043,6 +1049,8 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
             st_indices[8] = st
           elif 'Generation VIII onward' in gen_header:
             st_indices[7] = st
+            st_indices[8] = st
+          elif gen_header == 'Generation IX':
             st_indices[8] = st
           elif "Version" in gen_header:
             if st == len(st_tables) - 1:
