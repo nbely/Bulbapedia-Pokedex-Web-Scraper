@@ -1,11 +1,11 @@
-#Packages
+### Packages
 from bs4 import BeautifulSoup
 import re
 import pandas as pd
 import requests
 from urllib.request import urlopen
 
-#Set-up
+### Set-up
 url = "https://bulbapedia.bulbagarden.net/"
 img_url_base = 'https://archives.bulbagarden.net/media/upload/'
 pageurl = url + "wiki/List_of_Pokémon_by_National_Pokédex_number"
@@ -15,10 +15,12 @@ pokeList = []
 page = response.text
 soup = BeautifulSoup(page, 'html.parser')
 
-# Start of Script
+### Start of Script
 no = []
 name = []
 forme = []
+baseSpecies = []
+baseForme = []
 classification = []
 generation = []
 primary = []
@@ -64,14 +66,14 @@ spd = []
 bst = []
 color = []
 
-# Scrape Pokemon List from Bulbapedia
+### Scrape Pokemon List from Bulbapedia
 all_matches = soup.find_all('table', class_='roundy').pop()
 for i in all_matches:
     urlExtensions = ([a.attrs.get('href') for a in soup.select('table.roundy td a[title*="Pok"]')])
     for extension in urlExtensions:
         pokeList.append(url + extension)
 
-# Scrape Individual Bulbapedia Pokemon Pages
+### Scrape Individual Bulbapedia Pokemon Pages
 p_index = 0
 f_index = 0
 startIndex = 0
@@ -96,30 +98,46 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     f_a[0]['title'] == "Shellos"
     or f_a[0]['title'] == "Gastrodon"
     or f_a[0]['title'] == "Meowstic"
+    or f_a[0]['title'] == "Rockruff"
+    or f_a[0]['title'] == "Sinistea"
+    or f_a[0]['title'] == "Polteageist"
     or f_a[0]['title'] == "Indeedee"
     or f_a[0]['title'] == "Basculegion"
     or f_a[0]['title'] == "Oinkologne"
+    or f_a[0]['title'] == "Maushold"
   ):
     manual_added_formes.append(f_a[0]['title'])
     num_formes = 2
   elif f_a[0]['title'] == "Greninja":
     manual_added_formes.append(f_a[0]['title'])
     num_formes = 3
-  elif f_a[0]['title'] == "Pumpkaboo" or f_a[0]['title'] == "Gourgeist":
+  elif (
+    f_a[0]['title'] == "Pumpkaboo"
+    or f_a[0]['title'] == "Gourgeist"
+    or f_a[0]['title'] == "Amped Form"  # Toxtricity
+  ):
     manual_added_formes.append(f_a[0]['title'])
     num_formes = 4
-  elif f_a[0]['title'] == "50% Forme": # Zygarde
+  elif f_a[0]['title'] == "50% Forme":  # Zygarde
     manual_added_formes.append(f_a[0]['title'])
     num_formes = 5
-  elif f_a[0]['title'] == "Meteor Form": # Minior
+  elif f_a[0]['title'] == 'Red Flower' and 'Floette' in x:
+    num_formes = 7   # Extra forme added in since Blue Flower is parsed twice
+  elif f_a[0]['title'] == "Meteor Form":  # Minior
     manual_added_formes.append(f_a[0]['title'])
     num_formes = 8
-  elif f_a[0]['title'] == "Alcremie":
+  elif f_a[0]['title'] == "Alcremie" or f_a[0]['title'] == "Furfrou":
     manual_added_formes.append(f_a[0]['title'])
     num_formes = 10
+  elif f_a[0]['title'] == "Arceus" or f_a[0]['title'] == "Silvally":
+    manual_added_formes.append(f_a[0]['title'])
+    num_formes = 18
   elif f_a[0]['title'] == "Vivillon":
     manual_added_formes.append(f_a[0]['title'])
     num_formes = 20
+  elif f_a[0]['title'] == 'Unown':
+    manual_added_formes.append(f_a[0]['title'])
+    num_formes = 28
 
   for f_num in range(num_formes):
     # Skip if the forme is duplicated (not including manually entered formes)
@@ -148,17 +166,22 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     # p_tables[18] includes generation info
     p_tables = p_table.select('table.roundy')
 
-    #Find Dex Number
+    ### Find Dex Number
     no.append(int(p_tables[0].th.big.a.span.text.split('#')[1]))
-    print("Pokedex No: #" + str(no[f_index]) + " (pokeIndex: " + str(p_index) + ") (formeIndex: " + str(f_index) + ")")
 
-    #Find Name
+    ### Find Name
     name.append(p_tables[0].select('td.roundy td big b')[0].text)
-    print("Name: " + name[f_index])
 
-    # Find Forme
-    # Set manully entered formes first
-    if (
+    ### Find Forme
+    # Set formes not discerned first
+    if f_a[0]['title'] == 'Unown':
+      unownList = [
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+        'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+        'U', 'V', 'W', 'X', 'Y', 'Z', '!', '?'
+      ]
+      forme.append(unownList[f_num]) 
+    elif (
       name[f_index] == "Shellos"
       or name[f_index] == "Gastrodon"
     ):
@@ -166,6 +189,16 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         forme.append("West Sea " + name[f_index])
       elif f_num == 1:
         forme.append("East Sea" + name[f_index])
+    elif (
+      name[f_index] == "Arceus"
+      or name[f_index] == "Silvally"
+    ):
+      typeList = [
+        "Normal", "Bug", "Dark", "Dragon", "Electric", "Fairy", 
+        "Fighting", "Fire","Flying", "Ghost", "Grass", "Ground", 
+        "Ice", "Poison", "Psychic", "Rock", "Steel", "Water"
+      ]
+      forme.append(typeList[f_num])
     elif name[f_index] == 'Greninja':
       if f_num == 0:
         forme.append('')
@@ -214,6 +247,29 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         forme.append('Fancy Pattern')
       elif f_num == 19:
         forme.append('Poké Ball Pattern')
+    elif name[f_index] == 'Floette' and f_num == 6:  # Index 6 instead of 5 since Blue Flower is parsed twice
+      forme.append('Eternal Flower Floette')
+    elif name[f_index] == 'Furfrou':
+      if f_num == 0:
+        forme.append('Natural Form')
+      elif f_num == 1:
+        forme.append('Heart Trim')
+      elif f_num == 2:
+        forme.append('Star Trim')
+      elif f_num == 3:
+        forme.append('Diamond Trim')
+      elif f_num == 4:
+        forme.append('Deputante Trim')
+      elif f_num == 5:
+        forme.append('Matron Trim')
+      elif f_num == 6:
+        forme.append('Dandy Trim')
+      elif f_num == 7:
+        forme.append('La Reine Trim')
+      elif f_num == 8:
+        forme.append('Kabuki Trim')
+      elif f_num == 9:
+        forme.append('Pharaoh Trim')
     elif (
       name[f_index] == "Meowstic"
       or name[f_index] == "Indeedee"
@@ -229,13 +285,18 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       or name[f_index] == "Gourgeist"
     ):
       if f_num == 0:
-        forme.append("Small Size")
-      elif f_num == 1:
         forme.append("Average Size")
+      elif f_num == 1:
+        forme.append("Small Size")
       elif f_num == 2:
         forme.append("Large Size")
       elif f_num == 3:
         forme.append("Super Size")
+    elif (name[f_index] == "Rockruff"):
+      if f_num == 0:
+        forme.append("Midday Form")
+      elif f_num == 1:
+        forme.append("Own Tempo Form")
     elif (name[f_index] == "Zygarde"):
       if f_num == 0:
         forme.append("50% Forme")
@@ -248,10 +309,27 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       elif f_num == 4:
         forme.append("Power Construct 10% Forme")
     elif (name[f_index] == "Minior"):
-      if f_num == 0:
-        forme.append("Meteor Form")
-      elif f_num > 0 and f_num < 8:
+      if f_num == 0 or f_num > 1 and f_num < 8:
         forme.append("Core")
+      elif f_num == 1:
+        forme.append("Meteor Form")
+    elif (name[f_index] == "Toxtricity"):
+      if f_num == 0:
+        forme.append("Amped Form")
+      elif f_num == 1:
+        forme.append("Low Key Form")
+      if f_num == 2:
+        forme.append("Gigantamax Toxtricity")
+      if f_num == 3:
+        forme.append("Low Key Form/Gigantamax Toxtricity")
+    elif (
+      name[f_index] == "Sinistea"
+      or name[f_index] == "Polteageist"
+    ):
+      if f_num == 0:
+        forme.append("Phony Form")
+      elif f_num == 1:
+        forme.append("Antique Form")
     elif (name[f_index] == "Alcremie"):
       if f_num == 0:
         forme.append("Vanilla Cream")
@@ -273,15 +351,42 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         forme.append("Rainbow Swirl")
       elif f_num == 9:
         forme.append("Gigantamax Alcremie")
+    elif (name[f_index] == "Maushold"):
+      if f_num == 0:
+        forme.append("Family of Three")
+      elif f_num == 1:
+        forme.append("Family of Four")
     # Set no forme if the base Pokémon name is matched
     elif f_a[f_num]['title'] == name[f_index]:
       forme.append('')
     # Set the forme otherwise
     else:
       forme.append(f_a[f_num]['title'].replace('\u00A0', ' '))
-    print("Forme: " + forme[f_index])
 
-    #Find Classification
+    # Get names for matching from name and formes
+    fnames = []
+    if (forme[f_index] != ''):
+      if f_num == 0:
+        fnames.append(name[f_index])
+        fnames.append(forme[f_index])
+      else:
+        fnames = forme[f_index].replace('Power Construct ', '').split('/')
+    else:
+      fnames.append(name[f_index])
+    
+    ### Determine Base Species and Base Forme
+    if forme[f_index] != '':
+      if f_num == 0:
+        baseSpecies.append('')
+        baseForme.append(forme[f_index])
+      else:
+        baseSpecies.append(name[f_index])
+        baseForme.append('')
+    else:
+      baseSpecies.append('')
+      baseForme.append('')
+
+    ### Find Classification
     classif = p_table.select('td.roundy td a[title*="Pokémon category"] span')[0].text
     classifs = classif.split(" Pokémon")
     classifs.pop()
@@ -308,9 +413,8 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     if "Pokémon" in classif:
       classif = classif.replace('Pokémon', '').strip()
     classification.append(classif)
-    print("Classification: " + classification[f_index])
     
-    #Find Generation
+    ### Find Generation
     g = p_tables[18].select('ul li span a[class*="external text"]')
     g = BeautifulSoup(str(g), "html.parser").get_text()
     g = g[:-1][1:]
@@ -346,9 +450,8 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       generation[f_index] = 8
     if 'Paldean' in forme[f_index]:
       generation[f_index] = 9
-    print("Generation: " + str(generation[f_index]))
 
-    #Find Types
+    ### Find Types
     t_found = False
     t_tds = p_tables[2].select('tbody tr td')
     for t_td in t_tds:
@@ -392,10 +495,11 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           secondary.append(t[1].text)
       else:
         secondary.append('')
-    print("Type 1: " + primary[f_index])
-    print("Type 2: " + secondary[f_index])
+    if (name[f_index] == 'Arceus' or name[f_index] == 'Silvally'):  # Exceptions for Arceus and Silvally Formes
+      primary[f_index] = forme[f_index]
+      secondary[f_index] = ''
 
-    #Find Abilities
+    ### Find Abilities
     a_found = False
     ha_found = False
     base_ha_index = -1
@@ -405,13 +509,6 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       if len(a_tds[a_i].select('small')) != 0:
         td_small = a_tds[a_i].select('small')[0].text.replace('\u00A0', ' ').strip()
         td_small_matched = False
-        fnames = []
-        if (forme[f_index] != ''):
-          if f_num == 0:
-            fnames.append(name[f_index])
-          fnames.append(forme[f_index])
-        else:
-          fnames.append(name[f_index])
         if ("Hidden Ability" in td_small):
           ability_type = "Hidden Ability"
           base_ha_index = a_i
@@ -491,10 +588,9 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         else:
           abil2.append(a[1].text)
       else:
-          abil2.append('')
+        abil2.append('')
     if ha_found == False:
       a = p_tables[3].select('td a[title*="(Ability)"] span')
-
       if base_ha_index > 0:
         ha = a_tds[base_ha_index-1].select('a[title*="(Ability)"] span')
         if abil1[f_index] != a[0].text:
@@ -506,11 +602,16 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
             habil.append(ha[0].text)
       else:
         habil.append('')
-    print("Ability 1: " + abil1[f_index])
-    print("Ability 2: " + abil2[f_index])
-    print("Hidden Ability: " + habil[f_index])
+    if forme[f_index] == 'Cosplay Pikachu':  # Override for Cosplay Pikachu
+      abil1[f_index] = 'Lightning Rod'
+      habil[f_index] = ''
+    elif (
+      forme[f_index] == 'Spiky-eared Pichu'
+      or forme[f_index] == 'Eternal Flower Floette'  # Override for Eternal Flower Floette  # Override for Spiky-eared Pichu
+    ):
+      habil[f_index] = ''
 
-    #Find Gender Ratio
+    ### Find Gender Ratio
     g_unk = p_tables[4].select('a[title*="unknown"] span')
     if (len(g_unk) > 0):
       gender.append('N')
@@ -531,25 +632,28 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           gender.append('M')
           genderM.append(1)
           genderF.append(0)
-    if 'Female' in forme[f_index]:
+    if (
+      'Female' in forme[f_index]
+      or forme[f_index] == "Cosplay Pikachu"  # Override for Cosplay Pikachu
+    ):
       gender[f_index] = 'F'
       genderM[f_index] = 0
       genderF[f_index] = 1
-    elif 'Male' in forme[f_index]:
+    elif (
+      'Male' in forme[f_index]
+      or forme[f_index] == "Battle Bond Greninja"
+      or forme[f_index] == "Ash-Greninja"
+    ):
       gender[f_index] = 'M'
       genderM[f_index] = 1
       genderF[f_index] = 0
-    print("Gender: " + gender[f_index])
-    print("Gender Male Ratio: " + str(genderM[f_index]))
-    print("Gender Female Ratio: " + str(genderF[f_index]))
 
-    #Find Catch Rate
+    ### Find Catch Rate
     cr = p_tables[5].select('td')
     if len(cr) > 0:
       catchRate.append(int(cr[0].text.split(' (')[0]))
-    print("Catch Rate: " + str(catchRate[f_index]))
 
-    #Find Egg Groups
+    ### Find Egg Groups
     eg = p_tables[6].select('td a[title*="(Egg Group)"] span')
     if len(eg) == 1:
       if (eg[0].text == 'No Eggs Discovered'):
@@ -580,42 +684,44 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           else:
             eggGroup1[f_index] = eg[len(eg)-1].text
             eggGroup2[f_index] = ''
-    if 'Parter' in forme[f_index]:
+    if (
+      'Partner' in forme[f_index]  # Overide for Starters in Let's Go Pikachu/Eevee
+      or forme[f_index] == 'Eternal Flower Floette'  # Override for Eternal Flower Floette
+    ):
       eggGroup1[f_index] = ''
       eggGroup2[f_index] = ''
 
-    print("Egg Group 1: " + eggGroup1[f_index])
-    print("Egg Group 2: " + eggGroup2[f_index])
-
-    #Find Hatch Time
+    ### Find Hatch Time
     ht = p_tables[7].select('td')
     if len(ht) > 0:
       hatchTime.append(int(ht[0].text.split('\xa0cycles')[0]))
-    print("Hatch Time (Cycles): " + str(hatchTime[f_index]))
 
-    #Find Height
+    ### Find Height
     heightSet = False
     h_tds = p_tables[8].select('td')
     if len(h_tds) > 0:
       for h in range(int(len(h_tds)/3)):
-        if forme[f_index] == '':
-          if h_tds[h*3+2].find('small').text != name[f_index]:
-            continue
-        else:
-          if h_tds[h*3+2].find('small').text.replace('\u00A0', ' ').replace('(', ' (') != forme[f_index].replace('Power Construct ', ''): # Replace for PC Zygarde formes
-            continue
+        matches = set(fnames).intersection([h_tds[h*3+2].find('small').text.replace('\u00A0', ' ').replace('(', ' (').strip()])
+        if len(matches) < 1:
+          continue
         heightUS = h_tds[h*3].text.replace("′", "'").replace('″', '"').split("'")
         if (len(heightUS) < 2 and heightUS[0] == '\n'):
           heightUS = ['0', '0"']
         if (heightUS[0] == '0') and heightUS[1].split('"')[0] == '0':
           heightUS = h_tds[0].text.replace("′", "'").replace('″', '"').split("'")
-        heightIn.append(int(heightUS[0])*12 + int(heightUS[1].split('"')[0]))
+        if len(heightIn) == f_index:
+          heightIn.append(int(heightUS[0])*12 + int(heightUS[1].split('"')[0]))
+        else:
+          heightIn[f_index] = int(heightUS[0])*12 + int(heightUS[1].split('"')[0])
         heightMeters = h_tds[h*3+1].text.split(' m')[0]
         if (heightMeters == '0' or heightMeters == 'm\n'):
           heightMeters = h_tds[1].text.split(' m')[0]
         if "+" in heightMeters:
           heightMeters = heightMeters[:len(heightMeters)-1]
-        heightM.append(float(heightMeters))
+        if len(heightM) == f_index:
+          heightM.append(float(heightMeters))
+        else:
+          heightM[f_index] = float(heightMeters)
         heightSet = True
     if heightSet == False:
       heightUS = h_tds[0].text.replace("′", "'").replace('″', '"').split("'")
@@ -624,19 +730,14 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       if "+" in heightMeters:
         heightMeters = heightMeters[:len(heightMeters)-1]
       heightM.append(float(heightMeters))
-    print("Height (In): " + str(heightIn[f_index]))
-    print("Height (M): " + str(heightM[f_index]))
 
-    #Find Weight
+    ### Find Weight
     weightSet = False
     w_tds = p_tables[9].select('td')
     if len(w_tds) > 0:
       for w in range(int(len(w_tds)/3)):
-        if forme[f_index] == '':
-          if w_tds[w*3+2].find('small').text != name[f_index]:
-            continue
-        else:
-          if w_tds[w*3+2].find('small').text.replace('\u00A0', ' ').replace('(', ' (') != forme[f_index].replace('Power Construct ', ''): # Replace for PC Zygarde formes
+        matches = set(fnames).intersection([w_tds[w*3+2].find('small').text.replace('\u00A0', ' ').replace('(', ' (').strip()])
+        if len(matches) < 1:
             continue
         weightPounds = w_tds[w*3].text.replace(',', '').split(" lbs.")[0]
         if (
@@ -646,7 +747,10 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           or forme[f_index] == 'Gigantamax Butterfree'
         ):
           weightPounds = w_tds[0].text.replace(',', '').split(" lbs.")[0]
-        weightLbs.append(float(weightPounds))
+        if len(weightLbs) == f_index:
+          weightLbs.append(float(weightPounds))
+        else:
+          weightLbs[f_index] = float(weightPounds)
         weightKilos = w_tds[w*3+1].text.replace(',', '').split(' kg')[0]
         if (
           weightKilos == '0'
@@ -655,17 +759,18 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           or forme[f_index] == 'Gigantamax Butterfree'
         ):
           weightKilos = w_tds[1].text.replace(',', '').split(' kg')[0]
-        weightKg.append(float(weightKilos))
+        if len(weightKg) == f_index:
+          weightKg.append(float(weightKilos))
+        else:
+          weightKg[f_index] = float(weightKilos)
         weightSet = True
     if weightSet == False:
       weightPounds = w_tds[0].text.replace(',', '').split(" lbs.")[0]
       weightLbs.append(float(weightPounds))
       weightKilos = w_tds[1].text.replace(',', '').split(' kg')[0]
       weightKg.append(float(weightKilos))
-    print("Weight (Lbs): " + str(weightLbs[f_index]))
-    print("Weight (Kg): " + str(weightKg[f_index]))
 
-    #Find Mega Stone(s)
+    ### Find Mega Stone(s)
     megaStonesSet = False
     ms = p_tables[10].select('td a[title*="ite"] span')
     if len(ms) == 1:
@@ -698,10 +803,8 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         else:
           megaStone1.append('')
           megaStone2.append('')
-    print("Mega Stone 1: " + megaStone1[f_index])
-    print("Mega Stone 2: " + megaStone2[f_index])
 
-    #Find EXP Yield
+    ### Find EXP Yield
     ey_tds = p_tables[11].select('td')
     for ey_td in ey_tds:
       if len(ey_td.select('small')) != 0:
@@ -777,21 +880,17 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
             expYield_VPlus.append('')
       else:
         expYield_VPlus.append(int(ey_td.text.strip()))
-    print("EXP Yield (Gen I): " + str(expYield_I[f_index]))
-    print("EXP Yield (Gen II): " + str(expYield_II[f_index]))
-    print("EXP Yield (Gen III): " + str(expYield_III[f_index]))
-    print("EXP Yield (Gen IV): " + str(expYield_IV[f_index]))
-    print("EXP Yield (Gen V+): " + str(expYield_VPlus[f_index]))
+    if forme[f_index] == 'Eternal Flower Floette':  # Override for Eternal Flower Floette
+      expYield_VPlus[f_index] = 243
 
-    #Find Leveling Rate
+    ### Find Leveling Rate
     lr = p_tables[12].select('td')
     if len(lr) > 0:
       levelRate.append(lr[0].text.strip())
     else:
       levelRate.append('')
-    print("Leveling Rate: " + levelRate[f_index])
 
-    #Find EV Yields
+    ### Find EV Yields
     evYieldsSet = False
     ev_tds = p_tables[13].select('td')
     ev_tds.pop(0)
@@ -859,15 +958,9 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         evYieldSpd.append(int(ev_tds[6].text.split('*')[0].strip()))
       else:
         evYieldSpd.append(int(ev_tds[6].text.split('Speed')[0].strip()))
-    print("EV Yield (HP): " + str(evYieldHP[f_index]))
-    print("EV Yield (Atk): " + str(evYieldAtk[f_index]))
-    print("EV Yield (Def): " + str(evYieldDef[f_index]))
-    print("EV Yield (SpAtk): " + str(evYieldSpAtk[f_index]))
-    print("EV Yield (SpDef): " + str(evYieldSpDef[f_index]))
-    print("EV Yield (Spd): " + str(evYieldSpd[f_index]))
 
-    #Find Shape
-    #Exceptions sourced from: https://bulbapedia.bulbagarden.net/wiki/List_of_Pok%C3%A9mon_by_shape
+    ### Find Shape
+    # Exceptions sourced from: https://bulbapedia.bulbagarden.net/wiki/List_of_Pok%C3%A9mon_by_shape
     sh = p_tables[14].select('td a img')
     if len(sh) > 0:
       url_ext = sh[0]['src'].split('/32px')[0].split('thumb/')[1]
@@ -915,25 +1008,22 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         or forme[f_index] == 'Ultra Necrozma'
       ):
         shape[f_index] = img_url_base + '0/09/Body13.png'
-    print("Shape: " + shape[f_index])
 
-    #Find Footprint
+    ### Find Footprint
     fp = p_tables[15].select('td a img')
     footprint.append('https:'+fp[0]['src'])
     if name[f_index] == 'Giratina' and forme[f_index] == 'Origin Forme':
       footprint[f_index] = img_url_base + '4/40/F0487O.png'
-    print("Footprint: " + footprint[f_index])
 
-    #Find Base Friendship
+    ### Find Base Friendship
     fr = p_tables[17].select('td')
     bfr = fr[0].text.strip()
     if bfr == 'Unknown':
       baseFriendship.append(0)
     else:
       baseFriendship.append(int(bfr))
-    print("Base Friendship: " + str(baseFriendship[f_index]))
 
-    #Find Base Stats
+    ### Find Base Stats
     st_tables = p_soup.select('table[style*="white-space:nowrap"]')
     st_indices = [0, 0, 0, 0, 0, 0, 0, 0, 0]
     forme_indices_set = False
@@ -954,8 +1044,8 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
           header_located = True
         elif (
           temp_header == name[f_index]
-          or temp_header == forme[f_index].replace('Power Construct ', '')  # Replace exception for PC Zygarde Formes
-          or temp_header == forme[f_index].split(' (')[0]  # Exception For Paldean Tauros
+          or temp_header == forme[f_index].replace('Power Construct ', '') and temp_header != "Sunshine Form"  # Exceptions for PC Zygarde Formes and Cherrim-Sunshine
+          or temp_header == forme[f_index].split(' (')[0] and temp_header != "Sunshine Form"  # Exceptions for Paldean Tauros and Cherim-Sunshine
           or name[f_index] == "Rotom" and forme[f_index].split(' ')[0] in temp_header  # Exception for Rotom Formes
         ):
           st_header = temp_header
@@ -966,8 +1056,8 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
         continue
       else:
         if (
-          st_header == forme[f_index].replace('Power Construct ', '')  # Replace exception for PC Zygarde Formes
-          or st_header == forme[f_index].split(' (')[0]  # Exception For Paldean Tauros
+          st_header == forme[f_index].replace('Power Construct ', '') and st_header != "Sunshine Form"  # Exceptions for PC Zygarde Formes and Cherrim-Sunshine
+          or st_header == forme[f_index].split(' (')[0] and st_header != "Sunshine Form"  # Exceptions for Paldean Tauros and Cherim-Sunshine
           or name[f_index] == "Rotom" and forme[f_index].split(' ')[0] in st_header  # Exception for Rotom Formes
           and forme_indices_set == False
         ):
@@ -1091,16 +1181,16 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       if stats == []:
         stats = st_tables[st_index].find_all('th', attrs = {'style':['width:85px;padding-left:0.5em;padding-right:0.5em']})
       stats = ([x.text for x in stats])
-      #Keep only the stats numbers and store into a list
+      # Keep only the stats numbers and store into a list
       store = []
       for x in stats:
         store.append(re.findall(r'[0-9]?[0-9]?[0-9]?[0-9]', x))
-      #Removing brackets and converting stats into integer
+      # Removing brackets and converting stats into integer
       holder = []
       for x in store:
         x = (str(x))[:-2][2:]
         holder.append(x)
-      #Store stats into appropriate list
+      # Store stats into appropriate list
       hp_stats.append(holder[0])
       atk_stats.append(holder[1])
       def_stats.append(holder[2])
@@ -1115,17 +1205,18 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
     spdef.append(str(spdef_stats).replace(']', '').replace('[', '').replace("'", '').replace(' ', '').replace(',', '|'))
     spd.append(str(spd_stats).replace(']', '').replace('[', '').replace("'", '').replace(' ', '').replace(',', '|'))
     bst.append(str(bst_stats).replace(']', '').replace('[', '').replace("'", '').replace(' ', '').replace(',', '|'))
-    print("HP Stats: " + hp[f_index])
-    print("Attack Stats: " + atk[f_index])
-    print("Defense Stat: " + defense[f_index])
-    print("Sp.Atk Stat: " + spatk[f_index])
-    print("Sp.Def Stat: " + spdef[f_index])
-    print("Speed Stat: " + spd[f_index])
-    print("Base Stat Total: " + bst[f_index])
-    
-    #Adjust Minior Forme Names for Color Identification
+    if forme[f_index] == 'Eternal Flower Floette':  # Override for Eternal Flower Floette
+      hp[f_index] = "|||||74|74|74|74"
+      atk[f_index] = "|||||65|65|65|65"
+      defense[f_index] = "|||||67|67|67|67"
+      spatk[f_index] = "|||||125|125|125|125"
+      spdef[f_index] = "|||||128|128|128|128"
+      spd[f_index] = "|||||92|92|92|92"
+      bst[f_index] = "|||||551|551|551|551"
+
+    ### Adjust Minior Forme Names for Color Identification
     if name[f_index] == 'Minior' and forme[f_index] == 'Core':
-      if f_num == 1:
+      if f_num == 0:
         forme[f_index] = 'Red Core'
       elif f_num == 2:
         forme[f_index] = 'Orange Core'
@@ -1140,7 +1231,7 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       elif f_num == 7:
         forme[f_index] = 'Violet Core'
 
-    #Find Color
+    ### Find Color
     col = p_tables[16].select('td')
     color.append(col[0].text.split(' ')[1].split('Other')[0].strip())
     if (
@@ -1279,21 +1370,79 @@ for x in pokeList[startIndex:endIndex]: #Pokemon total 1161 (up to Pokedex #1010
       or name[f_index] == 'Alcremie' and forme[f_index] == 'Ruby Cream'
     ):
       color[f_index] = 'Pink'
-    print("Color: " + color[f_index])
 
+    ### Transform Name and Formes
+    if name[f_index] == "Farfetch'd" or name[f_index] == "Sirfetch'd":
+      name[f_index] = name[f_index].replace("'", '\u2019')
+      baseSpecies[f_index] = baseSpecies[f_index].replace("'", '\u2019')
+      forme[f_index] = forme[f_index].replace("'", '\u2019')
+    name[f_index] = name[f_index].replace('♀', '-F').replace('♂', '-M').replace('é', 'e\u0301')
+    if (forme[f_index] != ''):
+      forme[f_index] = forme[f_index].replace('Male', 'M').replace('Female', 'F').replace('Alolan', 'Alola').replace('Galarian', 'Galar').replace('Hisuian', 'Hisui').replace('Paldean', 'Paldea').replace('Partner', 'Starter').replace('Poké Ball', 'Pokeball').replace('Battle Bond', 'Bond').replace('Own Tempo', 'Dusk').replace('Crowned Sword', 'Crowned').replace('Crowned Shield', 'Crowned').replace('Gigantamax Urshifu (Single Strike Style)', 'Gmax').replace('Gigantamax Urshifu (Rapid Strike Style)', 'Rapid-Strike-Gmax').replace('Normal' if name[f_index] == 'Castform' else '', '').replace('Breed', '').replace('Cloak', '').replace('Sea', '').replace('Pattern', '').replace('Flower', '').replace('Standard' if baseForme[f_index] != 'Standard Mode' else '', '').replace('Drive', '').replace('Size', '').replace('Core', '').replace('Face', '').replace('Original Color', 'Original').replace('of Many Battles', '').replace('Rider', '').replace('Plumage', '').replace('Family of ', '').replace('Apex Build', '').replace('Ultimate Mode', '').replace(name[f_index], '').replace('Gigantamax', 'Gmax').replace('Style', '').replace('Forme', '').replace('Form', '').replace('Mode' if name[f_index] !='Vivillon' else '', '').replace('/', ' ').replace('(', '').replace(')', '').replace('  ', ' ').replace('-', ' ').strip().replace(' ', '-')
+      if (f_num > 0):
+        name[f_index] = name[f_index] + '-' + forme[f_index]
+        baseSpecies[f_index] = baseSpecies[f_index].replace('é', 'e\u0301')
+      else:
+        baseForme[f_index] = forme[f_index]
+        forme[f_index] = ''
+
+    print("Pokedex No: #" + str(no[f_index]) + " (pokeIndex: " + str(p_index) + ") (formeIndex: " + str(f_index) + ")")
+    print("Name: " + name[f_index])
+    print("Base Species: " + baseSpecies[f_index])
+    print("Base Forme: " + baseForme[f_index])
+    print("Forme: " + forme[f_index])
+    print("Classification: " + classification[f_index])
+    print("Generation: " + str(generation[f_index]))
+    print("Type 1: " + primary[f_index])
+    print("Type 2: " + secondary[f_index])
+    print("Ability 1: " + abil1[f_index])
+    print("Ability 2: " + abil2[f_index])
+    print("Hidden Ability: " + habil[f_index])
+    print("Gender: " + gender[f_index])
+    print("Gender Male Ratio: " + str(genderM[f_index]))
+    print("Gender Female Ratio: " + str(genderF[f_index]))
+    print("Catch Rate: " + str(catchRate[f_index]))
+    print("Egg Group 1: " + eggGroup1[f_index])
+    print("Egg Group 2: " + eggGroup2[f_index])
+    print("Hatch Time (Cycles): " + str(hatchTime[f_index]))
+    print("Height (In): " + str(heightIn[f_index]))
+    print("Height (M): " + str(heightM[f_index]))
+    print("Weight (Lbs): " + str(weightLbs[f_index]))
+    print("Weight (Kg): " + str(weightKg[f_index]))
+    print("Mega Stone 1: " + megaStone1[f_index])
+    print("Mega Stone 2: " + megaStone2[f_index])
+    print("EXP Yield (Gen I): " + str(expYield_I[f_index]))
+    print("EXP Yield (Gen II): " + str(expYield_II[f_index]))
+    print("EXP Yield (Gen III): " + str(expYield_III[f_index]))
+    print("EXP Yield (Gen IV): " + str(expYield_IV[f_index]))
+    print("EXP Yield (Gen V+): " + str(expYield_VPlus[f_index]))
+    print("Leveling Rate: " + levelRate[f_index])
+    print("EV Yield (HP): " + str(evYieldHP[f_index]))
+    print("EV Yield (Atk): " + str(evYieldAtk[f_index]))
+    print("EV Yield (Def): " + str(evYieldDef[f_index]))
+    print("EV Yield (SpAtk): " + str(evYieldSpAtk[f_index]))
+    print("EV Yield (SpDef): " + str(evYieldSpDef[f_index]))
+    print("EV Yield (Spd): " + str(evYieldSpd[f_index]))
+    print("Shape: " + shape[f_index])
+    print("Footprint: " + footprint[f_index])
+    print("Base Friendship: " + str(baseFriendship[f_index]))
+    print("HP Stats: " + hp[f_index])
+    print("Attack Stats: " + atk[f_index])
+    print("Defense Stat: " + defense[f_index])
+    print("Sp.Atk Stat: " + spatk[f_index])
+    print("Sp.Def Stat: " + spdef[f_index])
+    print("Speed Stat: " + spd[f_index])
+    print("Base Stat Total: " + bst[f_index])
+    print("Color: " + color[f_index])
     print(" ")
     f_index = f_index + 1
-    # print(len(abil1))
-    # print(abil1)
-    # print(len(abil2))
-    # print(abil2)
-    # print(len(habil))
-    # print(habil)
   p_index = p_index + 1
 
 pokemon = {
   'Dex No.': no,
   'Name': name,
+  'Base Species': baseSpecies,
+  'Base Forme': baseForme,
   'Forme': forme,
   'Classification': classification,
   'Generation':generation,
@@ -1340,11 +1489,11 @@ pokemon = {
   'Color': color,
 }
 
-#Create Dataframe
+# Create Dataframe
 df = pd.DataFrame.from_dict(pokemon)
 
-#Data Cleaning
+# Data Cleaning
 df.drop_duplicates()
 
-#Write Csv
+# Write Csv
 df.to_csv('bulbapedia_data.csv', index = None, header = True) 
